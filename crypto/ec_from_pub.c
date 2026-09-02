@@ -20,27 +20,17 @@ EC_KEY *ec_from_pub(uint8_t const pub[EC_PUB_LEN])
 		return (NULL);
 
 	group = EC_KEY_get0_group(key);
-	if (group == NULL)
-	{
-		EC_KEY_free(key);
-		return (NULL);
-	}
-
 	point = EC_POINT_new(group);
-	if (point == NULL)
+	if (group == NULL || point == NULL)
 	{
+		if (point != NULL)
+			EC_POINT_free(point);
 		EC_KEY_free(key);
 		return (NULL);
 	}
 
-	if (EC_POINT_oct2point(group, point, pub, EC_PUB_LEN, NULL) != 1)
-	{
-		EC_POINT_free(point);
-		EC_KEY_free(key);
-		return (NULL);
-	}
-
-	if (EC_KEY_set_public_key(key, point) != 1)
+	if (EC_POINT_oct2point(group, point, pub, EC_PUB_LEN, NULL) != 1 ||
+	    EC_KEY_set_public_key(key, point) != 1)
 	{
 		EC_POINT_free(point);
 		EC_KEY_free(key);
@@ -48,6 +38,5 @@ EC_KEY *ec_from_pub(uint8_t const pub[EC_PUB_LEN])
 	}
 
 	EC_POINT_free(point);
-
 	return (key);
 }
