@@ -12,6 +12,7 @@
 #define EC_PUB_LEN 65
 #define PUB_FILENAME "key_pub.pem"
 #define PRI_FILENAME "key.pem"
+#define SIG_LEN 72
 
 /**
  * struct sig_s - ECDSA signature
@@ -20,7 +21,7 @@
  */
 typedef struct sig_s
 {
-	uint8_t *sig;
+	uint8_t sig[SIG_LEN];
 	size_t len;
 } sig_t;
 

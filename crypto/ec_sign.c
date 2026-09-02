@@ -1,8 +1,6 @@
 #include "hblk_crypto.h"
 
 #include <openssl/ecdsa.h>
-#include <openssl/sha.h>
-#include <stdlib.h>
 
 /**
  * ec_sign - Signs a message using an EC private key
@@ -21,18 +19,11 @@ uint8_t *ec_sign(EC_KEY const *key, uint8_t const *msg,
 	if (key == NULL || msg == NULL || sig == NULL)
 		return (NULL);
 
-	sig->sig = malloc(ECDSA_size(key));
-	if (sig->sig == NULL)
-		return (NULL);
-
 	if (ECDSA_sign(0, msg, msglen, sig->sig, &siglen,
 		       (EC_KEY *)key) != 1)
-	{
-		free(sig->sig);
-		sig->sig = NULL;
 		return (NULL);
-	}
 
 	sig->len = siglen;
+
 	return (sig->sig);
 }
