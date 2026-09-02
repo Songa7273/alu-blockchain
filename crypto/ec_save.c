@@ -26,7 +26,7 @@ int ec_save(EC_KEY *key, char const *folder)
 			return (0);
 	}
 
-	snprintf(path, sizeof(path), "%s/key.pem", folder);
+	snprintf(path, sizeof(path), "%s/%s", folder, PRI_FILENAME);
 	file = fopen(path, "w");
 	if (file == NULL)
 		return (0);
@@ -39,7 +39,7 @@ int ec_save(EC_KEY *key, char const *folder)
 
 	fclose(file);
 
-	snprintf(path, sizeof(path), "%s/key_pub.pem", folder);
+	snprintf(path, sizeof(path), "%s/%s", folder, PUB_FILENAME);
 	file = fopen(path, "w");
 	if (file == NULL)
 		return (0);
