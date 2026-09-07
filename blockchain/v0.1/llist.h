@@ -17,6 +17,11 @@ typedef struct llist_node_s
 } llist_node_t;
 
 /**
+ * node_dtor_t - Node destructor function
+ */
+typedef void (*node_dtor_t)(void *);
+
+/**
  * struct llist_s - Linked list
  * @head: First node
  * @tail: Last node
@@ -29,12 +34,12 @@ typedef struct llist_s
 	size_t size;
 } llist_t;
 
+#define ADD_NODE_FRONT 0
+#define ADD_NODE_BACK 1
+
 llist_t *llist_create(void);
 int llist_add_node(llist_t *list, void *elem, int dir);
 void *llist_get_head(llist_t const *list);
-void llist_destroy(llist_t *list, void (*free_func)(void *elem));
-
-#define ADD_NODE_FRONT 0
-#define ADD_NODE_BACK 1
+void llist_destroy(llist_t *list, size_t free_elem, node_dtor_t dtor);
 
 #endif /* LLIST_H */

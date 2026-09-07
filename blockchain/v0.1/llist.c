@@ -86,9 +86,10 @@ void *llist_get_head(llist_t const *list)
 /**
  * llist_destroy - Destroy a linked list
  * @list: Linked list
- * @free_func: Function to free elements
+ * @free_elem: Whether to free elements
+ * @dtor: Element destructor
  */
-void llist_destroy(llist_t *list, void (*free_func)(void *elem))
+void llist_destroy(llist_t *list, size_t free_elem, node_dtor_t dtor)
 {
 	llist_node_t *node;
 	llist_node_t *next;
@@ -102,8 +103,8 @@ void llist_destroy(llist_t *list, void (*free_func)(void *elem))
 	{
 		next = node->next;
 
-		if (free_func != NULL)
-			free_func(node->elem);
+		if (free_elem && dtor != NULL)
+			dtor(node->elem);
 
 		free(node);
 		node = next;

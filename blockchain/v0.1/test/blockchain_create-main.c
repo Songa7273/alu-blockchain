@@ -63,7 +63,7 @@ int main(void)
 
 	printf("Genesis block: OK\n");
 
-	llist_destroy(blockchain->chain, free);
+	llist_destroy(blockchain->chain, 1, (node_dtor_t)free);
 	free(blockchain);
 
 	return (EXIT_SUCCESS);
