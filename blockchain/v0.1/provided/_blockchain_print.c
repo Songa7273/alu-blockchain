@@ -24,46 +24,50 @@ void _blockchain_print(blockchain_t const *blockchain)
 {
 	llist_node_t *node;
 	block_t *block;
-	size_t i = 0;
+
+	if (blockchain == NULL || blockchain->chain == NULL)
+		return;
 
 	printf("Blockchain: {\n");
-	printf("    chain [%lu]: [\n", blockchain->chain->size);
+	printf("\tchain [%zu]: [\n", blockchain->chain->size);
 
 	node = blockchain->chain->head;
 	while (node != NULL)
 	{
 		block = (block_t *)node->elem;
 
-		printf("        Block: {\n");
-		printf("            info: {\n");
-		printf("                index: %u,\n", block->info.index);
-		printf("                difficulty: %u,\n", block->info.difficulty);
-		printf("                timestamp: %lu,\n",
+		printf("\t\tBlock: {\n");
+		printf("\t\t\tinfo: {\n");
+		printf("\t\t\t\tindex: %u,\n", block->info.index);
+		printf("\t\t\t\tdifficulty: %u,\n", block->info.difficulty);
+		printf("\t\t\t\ttimestamp: %lu,\n",
 		       (unsigned long)block->info.timestamp);
-		printf("                nonce: %lu,\n",
+		printf("\t\t\t\tnonce: %lu,\n",
 		       (unsigned long)block->info.nonce);
-		printf("                prev_hash: ");
+		printf("\t\t\t\tprev_hash: ");
 		_print_hex_buffer(block->info.prev_hash, SHA256_DIGEST_LENGTH);
 		printf("\n");
-		printf("            },\n");
+		printf("\t\t\t},\n");
 
-		printf("            data: {\n");
-		printf("                buffer: \"");
-		fwrite(block->data.buffer, 1, block->data.len, stdout);
+		printf("\t\t\tdata: {\n");
+		printf("\t\t\t\tbuffer: \"");
+		if (block->data.buffer != NULL && block->data.len > 0)
+			fwrite(block->data.buffer, 1, block->data.len, stdout);
 		printf("\",\n");
-		printf("                len: %u\n", block->data.len);
-		printf("            },\n");
+		printf("\t\t\t\tlen: %u\n", block->data.len);
+		printf("\t\t\t},\n");
 
-		printf("            hash: ");
+		printf("\t\t\thash: ");
 		_print_hex_buffer(block->hash, SHA256_DIGEST_LENGTH);
 		printf("\n");
 
-		printf("        }");
+		printf("\t\t}");
 		if (node->next != NULL)
 			printf("\n");
 		else
-			printf("\n    ]\n}\n");
+			printf("\n\t]\n}\n");
 
 		node = node->next;
 	}
 }
+

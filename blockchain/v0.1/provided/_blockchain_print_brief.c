@@ -25,16 +25,19 @@ void _blockchain_print_brief(blockchain_t const *blockchain)
 	llist_node_t *node;
 	block_t *block;
 
+	if (blockchain == NULL || blockchain->chain == NULL)
+		return;
+
 	printf("Blockchain: {\n");
-	printf("    chain [%lu]: [\n", blockchain->chain->size);
+	printf("\tchain [%zu]: [\n", blockchain->chain->size);
 
 	node = blockchain->chain->head;
 	while (node != NULL)
 	{
 		block = (block_t *)node->elem;
 
-		printf("        Block: {\n");
-		printf("            info: { %u, %u, %lu, %lu, ",
+		printf("\t\tBlock: {\n");
+		printf("\t\t\tinfo: { %u, %u, %lu, %lu, ",
 		       block->info.index,
 		       block->info.difficulty,
 		       (unsigned long)block->info.timestamp,
@@ -42,20 +45,22 @@ void _blockchain_print_brief(blockchain_t const *blockchain)
 		_print_hex_buffer(block->info.prev_hash, SHA256_DIGEST_LENGTH);
 		printf(" },\n");
 
-		printf("            data: { \"");
-		fwrite(block->data.buffer, 1, block->data.len, stdout);
+		printf("\t\t\tdata: { \"");
+		if (block->data.buffer != NULL && block->data.len > 0)
+			fwrite(block->data.buffer, 1, block->data.len, stdout);
 		printf("\", %u },\n", block->data.len);
 
-		printf("            hash: ");
+		printf("\t\t\thash: ");
 		_print_hex_buffer(block->hash, SHA256_DIGEST_LENGTH);
 		printf("\n");
 
-		printf("        }");
+		printf("\t\t}");
 		if (node->next != NULL)
 			printf("\n");
 		else
-			printf("\n    ]\n}\n");
+			printf("\n\t]\n}\n");
 
 		node = node->next;
 	}
 }
+
