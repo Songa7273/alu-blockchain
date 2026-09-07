@@ -84,6 +84,35 @@ void *llist_get_head(llist_t const *list)
 }
 
 /**
+ * llist_pop - Remove and return the first element
+ * @list: Linked list
+ *
+ * Return: First element, or NULL
+ */
+void *llist_pop(llist_t *list)
+{
+	llist_node_t *node;
+	void *elem;
+
+	if (list == NULL || list->head == NULL)
+		return (NULL);
+
+	node = list->head;
+	elem = node->elem;
+
+	list->head = node->next;
+	if (list->head != NULL)
+		list->head->prev = NULL;
+	else
+		list->tail = NULL;
+
+	list->size--;
+	free(node);
+
+	return (elem);
+}
+
+/**
  * llist_destroy - Destroy a linked list
  * @list: Linked list
  * @free_elem: Whether to free elements

@@ -36,10 +36,12 @@ typedef struct llist_s
 
 #define ADD_NODE_FRONT 0
 #define ADD_NODE_BACK 1
+#define ADD_NODE_REAR ADD_NODE_BACK
 
 llist_t *llist_create(void);
 int llist_add_node(llist_t *list, void *elem, int dir);
 void *llist_get_head(llist_t const *list);
+void *llist_pop(llist_t *list);
 void llist_destroy(llist_t *list, size_t free_elem, node_dtor_t dtor);
 
 #endif /* LLIST_H */

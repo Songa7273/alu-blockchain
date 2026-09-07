@@ -17,8 +17,16 @@ static void genesis_init(block_t *genesis)
 
 	memset(genesis->info.prev_hash, 0, SHA256_DIGEST_LENGTH);
 
-	genesis->data.buffer = (int8_t *)"Holberton School";
-	genesis->data.len = 16;
+	genesis->data.buffer = malloc(16);
+	if (genesis->data.buffer != NULL)
+	{
+		memcpy(genesis->data.buffer, "Holberton School", 16);
+		genesis->data.len = 16;
+	}
+	else
+	{
+		genesis->data.len = 0;
+	}
 
 	memcpy(genesis->hash,
 	       "\xc5\x2c\x26\xc8\xb5\x46\x16\x39"
