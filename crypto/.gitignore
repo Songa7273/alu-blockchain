@@ -1,3 +1,5 @@
 ec_from_pub-test
 ec_create-test
 sha256-test
+*.o
+libhblk_crypto.a
