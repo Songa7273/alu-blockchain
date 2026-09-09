@@ -1,4 +1,3 @@
-#include <string.h>
 #include "blockchain.h"
 
 /* GENESIS_BLOCK - first block in the blockchain */
