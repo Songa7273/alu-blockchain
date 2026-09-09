@@ -1,130 +1,69 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-
 #include "blockchain.h"
+#include <fcntl.h>
+#include <unistd.h>
+
+int block_serialize(llist_node_t node_ptr, int idx, void *arg);
 
 /**
- * blockchain_serialize - Serialize a Blockchain into a file
- * @blockchain: Pointer to the Blockchain to serialize
- * @path: Path to the file to serialize into
+ *  blockchain_serialize - serializes a blockchain into a file
  *
- * Return: 0 on success, -1 on failure
+ * @blockchain: pointer to the Blockchain structure to be serialized
+ * @path: path to a file
+ *
+ * Return: 0 if successful, -1 if failed
  */
-int blockchain_serialize(blockchain_t const *blockchain, char const *path)
+int blockchain_serialize(blockchain_t const *blockchain,
+
+			 char const *path)
 {
 	FILE *file;
-	block_t *block;
-	llist_node_t *node;
-	uint32_t block_count;
-	uint8_t endianness = 1; /* Little endian */
-	char version[] = "0.1";
+	hblk_file_t file_header;
 
-	if (blockchain == NULL || path == NULL)
+	if (!blockchain || !path)
 		return (-1);
 
-	file = fopen(path, "wb");
-	if (file == NULL)
+	/*Set header values*/
+	memcpy(file_header.hblk_magic, HBLK_MAGIC, strlen(HBLK_MAGIC));
+	memcpy(file_header.hblk_version, HBLK_VERSION, strlen(HBLK_VERSION));
+	file_header.hblk_endian = _get_endianness();
+	file_header.hblk_blocks = llist_size(blockchain->chain);
+
+	if (file_header.hblk_blocks == -1)
 		return (-1);
 
-	/* Write magic number */
-	if (fwrite("HBLK", 1, 4, file) != 4)
-	{
-		fclose(file);
+	file = fopen(path, "w");
+	if (!file)
 		return (-1);
-	}
 
-	/* Write version */
-	if (fwrite(version, 1, 3, file) != 3)
-	{
-		fclose(file);
-		return (-1);
-	}
+	fwrite(&file_header, sizeof(file_header), 1, file);
 
-	/* Write endianness */
-	if (fwrite(&endianness, 1, 1, file) != 1)
-	{
-		fclose(file);
-		return (-1);
-	}
-
-	/* Count blocks */
-	block_count = blockchain->chain->size;
-
-	/* Write block count */
-	if (fwrite(&block_count, sizeof(uint32_t), 1, file) != 1)
-	{
-		fclose(file);
-		return (-1);
-	}
-
-	/* Write each block */
-	node = blockchain->chain->head;
-	while (node != NULL)
-	{
-		block = (block_t *)node->elem;
-
-		/* Write block info */
-		if (fwrite(&block->info.index, sizeof(uint32_t), 1, file) != 1)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		if (fwrite(&block->info.difficulty, sizeof(uint32_t), 1, file) != 1)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		if (fwrite(&block->info.timestamp, sizeof(uint64_t), 1, file) != 1)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		if (fwrite(&block->info.nonce, sizeof(uint64_t), 1, file) != 1)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		if (fwrite(block->info.prev_hash, 1, SHA256_DIGEST_LENGTH, file)
-			!= SHA256_DIGEST_LENGTH)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		/* Write data length and data */
-		if (fwrite(&block->data.len, sizeof(uint32_t), 1, file) != 1)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		if (block->data.len > 0)
-		{
-			if (fwrite(block->data.buffer, 1, block->data.len, file)
-				!= block->data.len)
-			{
-				fclose(file);
-				return (-1);
-			}
-		}
-
-		/* Write hash */
-		if (fwrite(block->hash, 1, SHA256_DIGEST_LENGTH, file)
-			!= SHA256_DIGEST_LENGTH)
-		{
-			fclose(file);
-			return (-1);
-		}
-
-		node = node->next;
-	}
+	llist_for_each(blockchain->chain, (node_func_t)block_serialize, file);
 
 	fclose(file);
 	return (0);
+}
+
+/**
+ * block_serialize - serializes a block into a file
+ * @node_ptr: pointer to the node to serialize
+ * @idx: index of the node
+ * @arg: file descriptor
+ * Return: 0 if successful, -1 if failed
+ */
+int block_serialize(llist_node_t node_ptr, int idx, void *arg)
+{
+	block_t *block = (block_t *)node_ptr;
+	FILE *file = (FILE *)arg;
+
+	if (!block || !file)
+		return (-1);
+
+	/*unused var*/
+	(void)idx;
+
+	fwrite((void *)&block->info, sizeof(block->info), 1, file);
+	fwrite((void *)&block->data.len, sizeof(block->data.len), 1, file);
+	fwrite(block->data.buffer, block->data.len, 1, file);
+	fwrite(block->hash, sizeof(block->hash), 1, file);
+	return (sizeof(*block));
 }
