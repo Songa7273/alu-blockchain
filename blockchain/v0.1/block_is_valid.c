@@ -2,22 +2,32 @@
 #include "blockchain.h"
 
 /**
- * check_genesis - Validates if a block matches the Genesis block specification
+ * check_genesis - Checks if a given block matches the static Genesis block
  * @block: Pointer to the block to check
  *
- * Return: 0 if valid genesis block, 1 otherwise
+ * Return: 0 if block is valid Genesis block, 1 otherwise
  */
 static int check_genesis(block_t const *block)
 {
-	block_t const genesis = {
-		{GENESIS_INDEX, GENESIS_DIFFICULTY, GENESIS_TIMESTAMP,
-		 GENESIS_NONCE, GENESIS_PREV_HASH},
-		{GENESIS_DATA, GENESIS_DATA_LEN},
-		GENESIS_HASH
-	};
+	block_t genesis;
 
-	if (block->info.index != 0)
+	if (!block || block->info.index != 0)
 		return (1);
+
+	memset(&genesis, 0, sizeof(genesis));
+	genesis.info.index = 0;
+	genesis.info.difficulty = 0;
+	genesis.info.timestamp = 1537578000;
+	genesis.info.nonce = 0;
+	memset(genesis.info.prev_hash, 0, SHA256_DIGEST_LENGTH);
+
+	memcpy(genesis.data.buffer, "Holberton School", 16);
+	genesis.data.len = 16;
+
+	memcpy(genesis.hash,
+	       "\xc5\x2c\x26\xc8\xb5\x46\x16\x39\x63\x5d\x8e\xdf\x2a\x97\xd4\x8d"
+	       "\x0c\x8e\x00\x09\xc8\x17\xf2\xb1\xd3\xd7\xff\x2f\x04\x51\x58\x03",
+	       SHA256_DIGEST_LENGTH);
 
 	return (memcmp(block, &genesis, sizeof(genesis)) != 0);
 }
