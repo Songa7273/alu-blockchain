@@ -1,19 +1,53 @@
 #include "transaction.h"
 
-int hash_inputs(llist_node_t node, unsigned int idx, void *arg);
-int hash_outputs(llist_node_t node, unsigned int idx, void *arg);
+/**
+ * hash_inputs - concatenates the input transaction IDs and output indexes
+ *
+ * @node: current input node
+ * @idx: index of the current input node
+ * @data: pointer to the buffer
+ */
+static void hash_inputs(llist_node_t node, unsigned int idx, void *data)
+{
+	uint8_t **buf = data;
+	tx_in_t *tx_in = node;
+
+	(void)idx;
+	memcpy(*buf, tx_in->tx_out_hash, SHA256_DIGEST_LENGTH);
+	*buf += SHA256_DIGEST_LENGTH;
+	memcpy(*buf, &tx_in->tx_out_index, sizeof(tx_in->tx_out_index));
+	*buf += sizeof(tx_in->tx_out_index);
+}
 
 /**
- * transaction_hash - computes the ID (hash) of a transaction
+ * hash_outputs - concatenates the output public key hashes and amounts
  *
- * @transaction: pointer to the transaction to hash
- * @hash_buf:    buffer to store the transaction hash
+ * @node: current output node
+ * @idx: index of the current output node
+ * @data: pointer to the buffer
+ */
+static void hash_outputs(llist_node_t node, unsigned int idx, void *data)
+{
+	uint8_t **buf = data;
+	tx_out_t *tx_out = node;
+
+	(void)idx;
+	memcpy(*buf, &tx_out->amount, sizeof(tx_out->amount));
+	*buf += sizeof(tx_out->amount);
+	memcpy(*buf, tx_out->pub, EC_PUB_LEN);
+	*buf += EC_PUB_LEN;
+}
+
+/**
+ * transaction_hash - computes the hash of a transaction
  *
- * Return: If transaction is NULL or an error occurs, return NULL.
- *         Otherwise, return a pointer to the hash_buf.
+ * @transaction: transaction to hash
+ * @hash_buf: buffer to store the hash
+ *
+ * Return: pointer to hash buffer, or NULL on failure
  */
 uint8_t *transaction_hash(transaction_t const *transaction,
-			  uint8_t hash_buf[SHA256_DIGEST_LENGTH])
+			   uint8_t hash_buf[SHA256_DIGEST_LENGTH])
 {
 	ssize_t len;
 	uint8_t *_buf, *buf;
@@ -21,46 +55,19 @@ uint8_t *transaction_hash(transaction_t const *transaction,
 	if (!transaction)
 		return (NULL);
 
-	len = SHA256_DIGEST_LENGTH * 3 * llist_size(transaction->inputs) + SHA256_DIGEST_LENGTH * llist_size(transaction->outputs);
+	len = SHA256_DIGEST_LENGTH * 3 * llist_size(transaction->inputs) +
+	      SHA256_DIGEST_LENGTH * llist_size(transaction->outputs);
 	_buf = buf = calloc(1, len);
 	if (!_buf)
 		return (NULL);
 	llist_for_each(transaction->inputs, hash_inputs, &buf);
 	llist_for_each(transaction->outputs, hash_outputs, &buf);
 	if (!sha256((const int8_t *)_buf, len, hash_buf))
-		hash_buf = NULL;
+	{
+		free(_buf);
+		return (NULL);
+	}
 	free(_buf);
-	return (hash_buf);
 
 	return (hash_buf);
-}
-
-/**
- * hash_inputs - llist action func to hash inputs
- * @node: tx_in_t * struct
- * @idx: index of node
- * @arg: pointer to address to write to
- * Return: 0 if success else 1
- */
-int hash_inputs(llist_node_t node, unsigned int idx, void *arg)
-{
-	memcpy(*(uint8_t **)arg, node, SHA256_DIGEST_LENGTH * 3);
-	*(uint8_t **)arg += SHA256_DIGEST_LENGTH * 3;
-	return (0);
-	(void)idx;
-}
-
-/**
- * hash_outputs - llist action func to hash outputs
- * @node: tx_out_t * struct
- * @idx: index of node
- * @arg: pointer to address to write to
- * Return: 0 if success else 1
- */
-int hash_outputs(llist_node_t node, unsigned int idx, void *arg)
-{
-	memcpy(*(uint8_t **)arg, ((tx_out_t *)node)->hash, SHA256_DIGEST_LENGTH);
-	*(uint8_t **)arg += SHA256_DIGEST_LENGTH;
-	return (0);
-	(void)idx;
 }
